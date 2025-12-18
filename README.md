@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Clubem
 
-## Getting Started
+Clubem is an internal operations platform for processing large restaurant Group Orders received as PDFs from third‑party food‑ordering platforms.
 
-First, run the development server:
+It acts as the **control plane** between raw PDF uploads and finalized POS‑ready order outputs.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## What Clubem Does
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Accepts multiple PDF uploads per order
+- Sends PDFs to an external extraction engine
+- Validates and normalizes returned JSON
+- Enables admin oversight and manual correction
+- Generates standardized outputs:
+  - Google Sheets
+  - Excel
+  - PDF
+- Automatically emails results
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## What Clubem Does NOT Do
 
-To learn more about Next.js, take a look at the following resources:
+- OCR or PDF parsing
+- Image processing
+- Data extraction logic
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Those are handled by a dedicated external engine.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Supported Platforms
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Grubhub
+- Forkable
+- Sharebite
+- CaterCow
+- EzCater
+- ClubFeast
+- Hungry
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## User Roles
+
+### Admin
+- Full system access
+- Manage platforms, templates, and users
+- View and correct all orders
+
+### User
+- Upload PDFs
+- View own uploads and orders
+- No system configuration access
+
+---
+
+## Tech Stack
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- uploadthing (uploads)
+- External extraction engine (integration)
+
+---
+
+## Project Structure (High-Level)
+
+- /login – Authentication UI
+- /admin – Admin dashboard
+- /app – User dashboard
+- /components – Reusable UI components
+- /templates – Output interpretation profiles
+
+---
+
+## Order Lifecycle
+
+1. Upload PDFs
+2. Engine extraction
+3. Template validation
+4. Manual review (if required)
+5. Output generation
+6. Email delivery
+
+---
+
+## Development Notes
+
+- UI-only authentication
+- Role-based routing
+- No UI libraries
+- Designed for extension with backend services
+
+---
+
+## License
+
+Internal use only.
