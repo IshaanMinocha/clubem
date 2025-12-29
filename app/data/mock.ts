@@ -1,12 +1,12 @@
-import { 
-  User, 
-  Platform, 
-  Upload, 
-  Order, 
+import {
+  User,
+  Platform,
+  Upload,
+  Order,
   DashboardStats,
   FieldConfig,
   ProcessConfig,
-  GuestItem 
+  GuestItem
 } from '@/app/types';
 
 // Mock Users
@@ -104,30 +104,30 @@ export const mockUploads: Upload[] = [
 const mockGuestItems1: GuestItem[] = [
   {
     id: 'g1',
-    guestName: 'John Smith',
-    itemName: 'Grilled Chicken Sandwich',
-    modifications: 'No mayo, extra pickles',
+    guest_name: 'John Smith',
+    item_name: 'Grilled Chicken Sandwich',
+    modifications: ['No mayo', 'extra pickles'],
     comments: 'Gluten-free bun if available',
   },
   {
     id: 'g2',
-    guestName: 'Jane Doe',
-    itemName: 'Caesar Salad',
-    modifications: 'Dressing on the side',
+    guest_name: 'Jane Doe',
+    item_name: 'Caesar Salad',
+    modifications: ['Dressing on the side'],
     comments: '',
   },
   {
     id: 'g3',
-    guestName: 'Bob Wilson',
-    itemName: 'Turkey Club',
-    modifications: 'Whole wheat bread',
+    guest_name: 'Bob Wilson',
+    item_name: 'Turkey Club',
+    modifications: ['Whole wheat bread'],
     comments: 'Extra napkins please',
   },
   {
     id: 'g4',
-    guestName: 'Alice Brown',
-    itemName: 'Veggie Wrap',
-    modifications: 'No onions, add avocado',
+    guest_name: 'Alice Brown',
+    item_name: 'Veggie Wrap',
+    modifications: ['No onions', 'add avocado'],
     comments: 'Nut allergy - no cross contamination',
   },
 ];
@@ -135,16 +135,16 @@ const mockGuestItems1: GuestItem[] = [
 const mockGuestItems2: GuestItem[] = [
   {
     id: 'g5',
-    guestName: 'Tom Harris',
-    itemName: 'BBQ Pulled Pork',
-    modifications: 'Extra sauce',
+    guest_name: 'Tom Harris',
+    item_name: 'BBQ Pulled Pork',
+    modifications: ['Extra sauce'],
     comments: '',
   },
   {
     id: 'g6',
-    guestName: 'Lisa Wang',
-    itemName: 'Garden Salad',
-    modifications: 'Vegan dressing',
+    guest_name: 'Lisa Wang',
+    item_name: 'Garden Salad',
+    modifications: ['Vegan dressing'],
     comments: 'Vegan diet',
   },
 ];
@@ -203,9 +203,9 @@ export const mockOrders: Order[] = [
       ...mockGuestItems2,
       {
         id: 'g7',
-        guestName: 'Chris Anderson',
-        itemName: 'Steak Burrito',
-        modifications: 'No sour cream',
+        guest_name: 'Chris Anderson',
+        item_name: 'Steak Burrito',
+        modifications: ['No sour cream'],
         comments: '',
       },
     ],

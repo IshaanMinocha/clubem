@@ -50,6 +50,7 @@ export type ProcessingStep =
   | 'email';
 
 export interface GuestItem {
+  id?: string;
   guest_name: string;
   item_name: string;
   modifications: any[];

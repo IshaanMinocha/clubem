@@ -87,7 +87,7 @@ export async function GET(
 
             const individualOrderHeader = [['Individual Orders']];
             const headers = Object.keys(exportData[0] || {});
-            const rows = exportData.map(item => Object.values(item));
+            const rows = exportData.map((item: any) => Object.values(item));
 
             const sheetData = [
                 ...mainInfoRows,
@@ -143,7 +143,7 @@ export async function GET(
 
             const individualOrderHeader = [['Individual Orders']];
             const headers = Object.keys(exportData[0] || {});
-            const rows = exportData.map(item => Object.values(item));
+            const rows = exportData.map((item: any) => Object.values(item));
 
             const excelData = [
                 ...mainInfoRows,
