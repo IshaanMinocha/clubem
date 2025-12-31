@@ -1,14 +1,16 @@
 #!/usr/bin/env sh
 set -eu
 
-# Run from project root:
-#   chmod +x scripts/dev_run.sh
-#   ./scripts/dev_run.sh
+# Automatically find project root (one level up from this script)
+# Using a more portable way to find the script directory
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
+cd "$PROJECT_ROOT"
 
 # Optional: create folders early (safe if already exists)
 mkdir -p data/uploads data/outputs data/jobs schema_registry/active schema_registry/history
 
-export PYTHONPATH="$(pwd)/src"
+export PYTHONPATH="$PROJECT_ROOT/src"
 
 echo "Starting worker in background..."
 poetry run python scripts/run_worker.py &

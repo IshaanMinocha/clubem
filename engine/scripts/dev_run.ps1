@@ -5,6 +5,7 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $ProjectRoot
 $env:PYTHONPATH = (Join-Path $ProjectRoot "src")
 
 # Create folders (safe if already exist)
