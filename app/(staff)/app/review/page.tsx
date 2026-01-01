@@ -211,7 +211,7 @@ export default function ManualReviewPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push(`/admin/orders/${selectedOrder.id}`)}
+                    onClick={() => router.push(`/app/orders/${selectedOrder.id}`)}
                     leftIcon={<EyeIcon className="w-4 h-4" />}
                   >
                     View Details

@@ -117,7 +117,7 @@ export default function StaffOrdersPage() {
           >
             View
           </Button>
-          {(order.status === 'SENT' || order.status === 'READY_TO_SEND') && (
+          {order.status === 'CONFIRMED' && (
             <Button
               variant="ghost"
               size="sm"
@@ -136,8 +136,7 @@ export default function StaffOrdersPage() {
     { value: 'all', label: 'All Statuses' },
     { value: 'PROCESSING', label: 'Processing' },
     { value: 'NEEDS_MANUAL_REVIEW', label: 'Needs Review' },
-    { value: 'READY_TO_SEND', label: 'Ready to Send' },
-    { value: 'SENT', label: 'Sent' },
+    { value: 'CONFIRMED', label: 'Confirmed' },
     { value: 'FAILED', label: 'Failed' },
   ];
 

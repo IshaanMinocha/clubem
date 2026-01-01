@@ -1,0 +1,12 @@
+{
+  "job_id": "6a392511-5408-4db5-82ab-4cb024e7a5d1",
+  "status": "failed",
+  "created_at": 1767290307,
+  "updated_at": 1767290308,
+  "payload": {
+    "type": "parse",
+    "file_count": 1
+  },
+  "result": null,
+  "error": "Could not detect platform for: data\\uploads\\6a392511-5408-4db5-82ab-4cb024e7a5d1\\ClubFeastLabelsUnedited.pdf"
+}

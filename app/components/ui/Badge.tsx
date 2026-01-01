@@ -46,8 +46,7 @@ export function getStatusBadgeVariant(status: string): BadgeVariant {
     processing: 'processing',
     needs_review: 'warning',
     needs_manual_review: 'warning',
-    ready_to_send: 'info',
-    sent: 'success',
+    confirmed: 'success',
     failed: 'danger',
     // Upload statuses
     pending: 'default',

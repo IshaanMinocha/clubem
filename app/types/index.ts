@@ -39,8 +39,7 @@ export interface Upload {
 export type OrderStatus = 
   | 'processing' 
   | 'needs_review' 
-  | 'ready_to_send' 
-  | 'sent' 
+  | 'confirmed' 
   | 'failed';
 
 export type ProcessingStep = 

@@ -52,7 +52,9 @@ export async function POST(request: NextRequest) {
       data: {
         status: OrderStatus.PROCESSING,
         groupOrderNumber: `PENDING-${Date.now().toString().slice(-6)}`, // Temporary until parsed
-        data: {}, // Will be filled once engine completes
+        data: {
+          originalFiles: files.map(f => f.name)
+        }, // Initial data with filenames
         engineJobId: job_id,
         platformId: platformId,
         createdById: userId,
@@ -79,14 +81,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
+    console.log('GET /api/orders - userId:', userId);
+
     if (!userId) {
+      console.log('GET /api/orders - No userId provided');
       return unauthorizedResponse('User ID is required');
     }
 
     const user = await getAuthenticatedUserFromId(userId);
     if (!user) {
+      console.log('GET /api/orders - User not found or not approved:', userId);
       return unauthorizedResponse('Invalid or unapproved user');
     }
+
+    console.log('GET /api/orders - User authenticated:', user.username, 'role:', user.role);
 
     const orders = await prisma.order.findMany({
       where: user.role === 'admin' ? {} : { createdById: userId },
@@ -117,8 +125,11 @@ export async function GET(request: NextRequest) {
                 where: { id: order.id },
                 data: {
                   status: OrderStatus.NEEDS_MANUAL_REVIEW,
-                  groupOrderNumber: outputData.order_info?.order_number || order.groupOrderNumber,
-                  data: outputData,
+                  groupOrderNumber: outputData.group_orders?.[0]?.group_order_number || order.groupOrderNumber,
+                  data: {
+                    ...outputData,
+                    originalFiles: (order.data as any)?.originalFiles || []
+                  },
                 },
                 include: {
                   platform: true,
@@ -152,7 +163,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ orders: updatedOrders });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get orders error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

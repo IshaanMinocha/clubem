@@ -171,17 +171,17 @@ export default function AdminDashboardPage() {
               </p>
               <p className="text-xs text-amber-600 mt-1">Needs Review</p>
             </div>
-            <div className="text-center p-4 bg-sky-50 rounded-md">
-              <p className="text-2xl font-semibold text-sky-700">
-                {orders.filter(o => o.status === 'READY_TO_SEND').length}
-              </p>
-              <p className="text-xs text-sky-600 mt-1">Ready to Send</p>
-            </div>
             <div className="text-center p-4 bg-emerald-50 rounded-md">
               <p className="text-2xl font-semibold text-emerald-700">
-                {orders.filter(o => o.status === 'SENT').length}
+                {orders.filter(o => o.status === 'CONFIRMED').length}
               </p>
-              <p className="text-xs text-emerald-600 mt-1">Sent</p>
+              <p className="text-xs text-emerald-600 mt-1">Confirmed</p>
+            </div>
+            <div className="text-center p-4 bg-red-50 rounded-md">
+              <p className="text-2xl font-semibold text-red-700">
+                {orders.filter(o => o.status === 'FAILED').length}
+              </p>
+              <p className="text-xs text-red-600 mt-1">Failed</p>
             </div>
           </div>
         </Card>

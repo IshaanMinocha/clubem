@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/utils/prisma';
-import { Parser } from 'json2csv';
 import * as XLSX from 'xlsx';
-import { getValidGoogleToken, createGoogleSheet } from '@/app/api/integrations/google/utils';
+import ExcelJS from 'exceljs';
+import { getValidGoogleToken, createGoogleSheet, formatGoogleSheet } from '@/app/api/integrations/google/utils';
+import { prepareExportData } from '@/src/utils/export';
 
 export async function GET(
     request: NextRequest,
@@ -38,24 +39,9 @@ export async function GET(
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
         }
 
+        const fullSheetData = prepareExportData(order);
         const orderData = order.data as any;
-        const guestItems = orderData?.individual_orders || [];
         const mainInfo = orderData?.main_order_information || {};
-
-        // Prepare data for export using the specific format from work.pdf/excel_export.py
-        const exportData = guestItems.map((item: any) => {
-            const modifications = Array.isArray(item.modifications) ? item.modifications : [];
-            return {
-                'Group Order #': order.groupOrderNumber,
-                'Guest Name': item.guest_name || '',
-                'Item Name': item.item_name || '',
-                'Modification 1': modifications[0] || '',
-                'Modification 2': modifications[1] || '',
-                'Modification 3': modifications[2] || '',
-                'Modification 4': modifications[3] || '',
-                'Comments': item.comments || '',
-            };
-        });
 
         if (format === 'gsheet') {
             const accessToken = await getValidGoogleToken(userId);
@@ -63,105 +49,139 @@ export async function GET(
                 return NextResponse.json({ error: 'Google Account not connected or session expired' }, { status: 401 });
             }
 
-            // Prepare structured data for Google Sheets (Matching excel_export.py format)
-            const mainInfoRows = [
-                ['Main Order Information'],
-                ['Business Client', mainInfo.business_client || ''],
-                ['Client Name', mainInfo.client_name || ''],
-                ['Client Information', mainInfo.client_information || ''],
-                ['Order Subtotal', mainInfo.order_subtotal ? `$${mainInfo.order_subtotal}` : ''],
-                ['Requested Pickup Time', mainInfo.requested_pick_up_time || ''],
-                ['Requested Pickup Date', mainInfo.requested_pick_up_date || ''],
-                ['Number of Guests', mainInfo.number_of_guests || ''],
-                ['Delivery', mainInfo.delivery || ''],
-                [], // Empty row
-            ];
-
-            const groupOrders = orderData?.group_orders || [];
-            const groupOrderRows = groupOrders.length > 0 ? [
-                ['Group Orders'],
-                ['Group Order Number', groupOrders[0].group_order_number || ''],
-                ['Pick Time', groupOrders[0].pick_time || ''],
-                [], // Empty row
-            ] : [];
-
-            const individualOrderHeader = [['Individual Orders']];
-            const headers = Object.keys(exportData[0] || {});
-            const rows = exportData.map((item: any) => Object.values(item));
-
-            const sheetData = [
-                ...mainInfoRows,
-                ...groupOrderRows,
-                ...individualOrderHeader,
-                headers,
-                ...rows
-            ];
-
-            const sheetUrl = await createGoogleSheet(
+            const { url, spreadsheetId } = await createGoogleSheet(
                 accessToken,
                 `Order ${order.groupOrderNumber} - ${mainInfo.business_client || 'Export'}`,
-                sheetData
+                fullSheetData
             );
 
-            return NextResponse.json({ url: sheetUrl });
+            // Format the sheet (indentation and colors)
+            const groupOrders = orderData?.group_orders || [];
+            const individualOrders = orderData?.individual_orders || [];
+
+            // Calculate where individual orders start
+            // Main info (10 rows) + Group info (4 rows if exists)
+            const individualOrderStartIndex = 10 + (groupOrders.length > 0 ? 4 : 0);
+
+            await formatGoogleSheet(
+                accessToken,
+                spreadsheetId,
+                fullSheetData,
+                individualOrderStartIndex,
+                individualOrders.length
+            );
+
+            return NextResponse.json({ url });
         }
 
         if (format === 'csv') {
-            const parser = new Parser();
-            const csv = parser.parse(exportData);
+            const csv = fullSheetData.map(row =>
+                row.map(cell => {
+                    const s = String(cell ?? '');
+                    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+                        return `"${s.replace(/"/g, '""')}"`;
+                    }
+                    return s;
+                }).join(',')
+            ).join('\n');
 
-            return new NextResponse(csv, {
+            // Sanitize filename for header
+            const safeFilename = `order_${order.groupOrderNumber}`.replace(/[^\x00-\x7F]/g, '_');
+
+            return new NextResponse(new TextEncoder().encode(csv), {
                 headers: {
-                    'Content-Type': 'text/csv',
-                    'Content-Disposition': `attachment; filename="order_${order.groupOrderNumber}.csv"`,
+                    'Content-Type': 'text/csv; charset=utf-8',
+                    'Content-Disposition': `attachment; filename="${safeFilename}.csv"`,
                 },
             });
         } else if (format === 'excel') {
-            const workbook = XLSX.utils.book_new();
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Order Export');
 
-            // Prepare structured data for Excel
-            const mainInfoRows = [
-                ['Main Order Information'],
-                ['Business Client', mainInfo.business_client || ''],
-                ['Client Name', mainInfo.client_name || ''],
-                ['Client Information', mainInfo.client_information || ''],
-                ['Order Subtotal', mainInfo.order_subtotal ? `$${mainInfo.order_subtotal}` : ''],
-                ['Requested Pickup Time', mainInfo.requested_pick_up_time || ''],
-                ['Requested Pickup Date', mainInfo.requested_pick_up_date || ''],
-                ['Number of Guests', mainInfo.number_of_guests || ''],
-                ['Delivery', mainInfo.delivery || ''],
-                [], // Empty row
+            // Set column widths
+            worksheet.columns = [
+                { width: 30 }, // A
+                { width: 30 }, // B
+                { width: 30 }, // C
+                { width: 50 }, // D
+                { width: 50 }, // E
             ];
 
             const groupOrders = orderData?.group_orders || [];
-            const groupOrderRows = groupOrders.length > 0 ? [
-                ['Group Orders'],
-                ['Group Order Number', groupOrders[0].group_order_number || ''],
-                ['Pick Time', groupOrders[0].pick_time || ''],
-                [], // Empty row
-            ] : [];
+            const individualOrders = orderData?.individual_orders || [];
 
-            const individualOrderHeader = [['Individual Orders']];
-            const headers = Object.keys(exportData[0] || {});
-            const rows = exportData.map((item: any) => Object.values(item));
+            // 1. Main Order Information (Base)
+            worksheet.addRow(['Main Order Information']).font = { bold: true, size: 14 };
+            worksheet.addRow(['Business Client', mainInfo.business_client || '']);
+            worksheet.addRow(['Client Name', mainInfo.client_name || '']);
+            worksheet.addRow(['Client Information', mainInfo.client_information || '']);
+            worksheet.addRow(['Order Subtotal', mainInfo.order_subtotal ? `$${mainInfo.order_subtotal}` : '']);
+            worksheet.addRow(['Requested Pickup Time', mainInfo.requested_pick_up_time || '']);
+            worksheet.addRow(['Requested Pickup Date', mainInfo.requested_pick_up_date || '']);
+            worksheet.addRow(['Number of Guests', mainInfo.number_of_guests || '']);
+            worksheet.addRow(['Delivery', mainInfo.delivery || '']);
+            worksheet.addRow([]); // Empty row
 
-            const excelData = [
-                ...mainInfoRows,
-                ...groupOrderRows,
-                ...individualOrderHeader,
-                headers,
-                ...rows
+            // 2. Group Order Info (1 indentation)
+            if (groupOrders.length > 0) {
+                const groupRow = worksheet.addRow(['', 'Group Order']);
+                groupRow.getCell(2).font = { bold: true, size: 12 };
+
+                worksheet.addRow(['', 'Group Order Number #', groupOrders[0].group_order_number || '']);
+                worksheet.addRow(['', 'Group Order # - Pick Time', groupOrders[0].pick_time || '']);
+                worksheet.addRow([]); // Empty row
+            }
+
+            // 3. Individual Orders (2 indentations + colors)
+            const colors = [
+                'FFC7CE', // Light Red
+                'FFEB9C', // Light Yellow
+                'C6EFCE', // Light Green
+                'BDD7EE', // Light Blue
+                'D9D9D9', // Light Grey
+                'E2EFDA', // Pale Green
+                'FCE4D6', // Pale Orange
             ];
 
-            const worksheet = XLSX.utils.aoa_to_sheet(excelData);
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Order Export');
+            individualOrders.forEach((item: any, index: number) => {
+                const color = colors[index % colors.length];
+                const modifications = Array.isArray(item.modifications) ? item.modifications : [];
 
-            const buf = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+                const headerRow = worksheet.addRow(['', '', `Individual Order ${index + 1}`]);
+                headerRow.getCell(3).font = { bold: true };
 
-            return new NextResponse(buf, {
+                // Style individual order block with color
+                const rows = [
+                    worksheet.addRow(['', '', 'Group Order Number #', item.group_order_number || '']),
+                    worksheet.addRow(['', '', 'Guest Name', item.guest_name || '']),
+                    worksheet.addRow(['', '', 'Item Name', item.item_name || '']),
+                    worksheet.addRow(['', '', 'Modifications', ...modifications]),
+                    worksheet.addRow(['', '', 'Comments', item.comments || '']),
+                ];
+
+                [headerRow, ...rows].forEach(row => {
+                    for (let i = 3; i <= 10; i++) {
+                        const cell = row.getCell(i);
+                        if (cell.value || i <= 5) {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: color }
+                            };
+                        }
+                    }
+                });
+
+                worksheet.addRow([]); // Empty row
+            });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const safeExcelFilename = `order_${order.groupOrderNumber}`.replace(/[^\x00-\x7F]/g, '_');
+
+            return new NextResponse(buffer as Buffer, {
                 headers: {
                     'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    'Content-Disposition': `attachment; filename="order_${order.groupOrderNumber}.xlsx"`,
+                    'Content-Disposition': `attachment; filename="${safeExcelFilename}.xlsx"`,
                 },
             });
         }

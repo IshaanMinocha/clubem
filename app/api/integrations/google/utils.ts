@@ -36,7 +36,7 @@ export async function getValidGoogleToken(userId: string) {
     }
 
     const data = await response.json();
-    
+
     await prisma.user.update({
       where: { id: userId },
       data: {
@@ -91,9 +91,85 @@ export async function createGoogleSheet(accessToken: string, title: string, data
       throw new Error(error.error?.message || 'Failed to populate spreadsheet');
     }
 
-    return spreadsheet.spreadsheetUrl;
+    return { url: spreadsheet.spreadsheetUrl, spreadsheetId };
   } catch (err: any) {
     console.error('Create sheet error:', err);
     throw err;
+  }
+}
+
+export async function formatGoogleSheet(accessToken: string, spreadsheetId: string, data: any[][], individualOrderStartIndex: number, individualOrderCount: number) {
+  try {
+    const requests: any[] = [];
+
+    // Colors for individual orders
+    const colors = [
+      { red: 1, green: 0.78, blue: 0.81 }, // Light Red (FFC7CE approx)
+      { red: 1, green: 0.92, blue: 0.61 }, // Light Yellow (FFEB9C approx)
+      { red: 0.78, green: 0.94, blue: 0.81 }, // Light Green (C6EFCE approx)
+      { red: 0.74, green: 0.84, blue: 0.93 }, // Light Blue (BDD7EE approx)
+      { red: 0.85, green: 0.85, blue: 0.85 }, // Light Grey (D9D9D9 approx)
+    ];
+
+    // Format individual orders
+    let currentRow = individualOrderStartIndex;
+    for (let i = 0; i < individualOrderCount; i++) {
+      const color = colors[i % colors.length];
+
+      // Each individual order has 6 rows (header + 5 fields) + 1 empty row
+      const startRow = currentRow;
+      const endRow = currentRow + 6;
+
+      requests.push({
+        repeatCell: {
+          range: {
+            sheetId: 0,
+            startRowIndex: startRow,
+            endRowIndex: endRow,
+            startColumnIndex: 2,
+            endColumnIndex: 10
+          },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: color,
+            }
+          },
+          fields: 'userEnteredFormat.backgroundColor'
+        }
+      });
+
+      currentRow += 7; // Skip to next block
+    }
+
+    // Bold headers
+    requests.push({
+      repeatCell: {
+        range: {
+          sheetId: 0,
+          startRowIndex: 0,
+          endRowIndex: 1,
+          startColumnIndex: 0,
+          endColumnIndex: 1
+        },
+        cell: {
+          userEnteredFormat: {
+            textFormat: { bold: true, fontSize: 14 }
+          }
+        },
+        fields: 'userEnteredFormat.textFormat'
+      }
+    });
+
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ requests }),
+    });
+
+  } catch (err) {
+    console.error('Format sheet error:', err);
   }
 }

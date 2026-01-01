@@ -8,7 +8,7 @@ import { Table, TableCard } from '@/app/components/ui/Table';
 import { Badge, getStatusBadgeVariant, formatStatus } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { useAuth } from '@/app/context/AuthContext';
-import { SendIcon, ReviewIcon, DownloadIcon, SheetIcon, RefreshIcon } from '@/app/components/icons';
+import { SendIcon, ReviewIcon, DownloadIcon, SheetIcon, RefreshIcon, CheckIcon } from '@/app/components/icons';
 import { toast } from 'react-hot-toast';
 
 interface PageProps {
@@ -300,39 +300,46 @@ export default function AdminOrderDetailPage({ params }: PageProps) {
 
             <div className="pt-4 border-t border-slate-200 space-y-2">
               {order.status === 'NEEDS_MANUAL_REVIEW' && (
-                <Button
-                  variant="primary"
-                  className="w-full"
-                  leftIcon={<ReviewIcon className="w-4 h-4" />}
-                  onClick={() => handleUpdateStatus('READY_TO_SEND')}
-                  isLoading={isSending}
-                >
-                  Accept & Mark Ready
-                </Button>
+                <>
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    leftIcon={<ReviewIcon className="w-4 h-4" />}
+                    onClick={() => router.push(`/admin/review?orderId=${order.id}`)}
+                  >
+                    Review Order
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                    leftIcon={<CheckIcon className="w-4 h-4" />}
+                    onClick={() => handleUpdateStatus('CONFIRMED')}
+                    isLoading={isSending}
+                  >
+                    Confirm Order
+                  </Button>
+                </>
               )}
-              {order.status === 'READY_TO_SEND' && (
-                <Button
-                  variant="primary"
-                  className="w-full"
-                  leftIcon={<SendIcon className="w-4 h-4" />}
-                  onClick={() => handleUpdateStatus('SENT')}
-                  isLoading={isSending}
-                >
-                  Confirm & Send
-                </Button>
+              {order.status === 'CONFIRMED' && (
+                <div className="flex items-center justify-center gap-2 text-emerald-600 font-medium px-4 py-2 bg-emerald-50 rounded-md">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Confirmed
+                </div>
               )}
-              {order.status !== 'NEEDS_MANUAL_REVIEW' && order.status !== 'READY_TO_SEND' && (
-                <p className="text-sm text-slate-500 italic text-center">
-                  No further actions available for this status.
-                </p>
+              {order.status !== 'NEEDS_MANUAL_REVIEW' && order.status !== 'CONFIRMED' && (
+                <div className="text-slate-500 font-medium px-4 py-2 text-center">
+                  Status: {formatStatus(order.status.toLowerCase() as any)}
+                </div>
               )}
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Export Options */}
-      {(order.status === 'READY_TO_SEND' || order.status === 'SENT') && (
+      {/* Export Options - Only show when order is confirmed */}
+      {order.status === 'CONFIRMED' && (
         <Card className="mb-6">
           <CardHeader title="Export Options" />
           <div className="flex flex-wrap gap-3">

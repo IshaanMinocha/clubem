@@ -1,0 +1,12 @@
+{
+  "job_id": "e9405236-089d-4d68-a78c-7cb1a270c931",
+  "status": "failed",
+  "created_at": 1767290350,
+  "updated_at": 1767290350,
+  "payload": {
+    "type": "parse",
+    "file_count": 1
+  },
+  "result": null,
+  "error": "Could not detect platform for: data\\uploads\\e9405236-089d-4d68-a78c-7cb1a270c931\\HungryLabelsUnedited.pdf"
+}

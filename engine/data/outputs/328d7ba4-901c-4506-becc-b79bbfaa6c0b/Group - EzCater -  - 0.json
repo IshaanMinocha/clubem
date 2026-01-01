@@ -1,0 +1,23 @@
+{
+  "main_order_information": {
+    "business_client": "Group - EzCater",
+    "client_name": "",
+    "client_information": "",
+    "order_subtotal": null,
+    "requested_pick_up_time": "",
+    "requested_pick_up_date": "",
+    "number_of_guests": 0,
+    "delivery": "Delivery"
+  },
+  "group_orders": [
+    {
+      "group_order_number": "1C5-3VR",
+      "pick_time": ""
+    }
+  ],
+  "individual_orders": [],
+  "metadata": {
+    "platform": "ezcater",
+    "source_file": "data\\uploads\\328d7ba4-901c-4506-becc-b79bbfaa6c0b\\EzCaterUnedited (1).pdf"
+  }
+}

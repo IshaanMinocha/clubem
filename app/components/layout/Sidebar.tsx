@@ -16,6 +16,7 @@ import {
   SettingsIcon,
   LogoutIcon,
   QueueIcon,
+  SendIcon,
 } from '@/app/components/icons';
 
 interface NavItem {
@@ -32,6 +33,7 @@ const adminNavItems: NavItem[] = [
   { name: 'Platforms', href: '/admin/platforms', icon: <PlatformIcon /> },
   { name: 'Users', href: '/admin/users', icon: <UsersIcon /> },
   { name: 'Manual Review', href: '/admin/review', icon: <ReviewIcon /> },
+  { name: 'Emails', href: '/admin/emails', icon: <SendIcon /> },
   { name: 'Settings', href: '/admin/settings', icon: <SettingsIcon /> },
 ];
 
@@ -39,6 +41,7 @@ const staffNavItems: NavItem[] = [
   { name: 'Upload Orders', href: '/app', icon: <UploadIcon /> },
   { name: 'My Uploads', href: '/app/uploads', icon: <OrdersIcon /> },
   { name: 'Orders', href: '/app/orders', icon: <OrdersIcon /> },
+  { name: 'Manual Review', href: '/app/review', icon: <ReviewIcon /> },
   { name: 'Settings', href: '/app/settings', icon: <SettingsIcon /> },
 ];
 

@@ -57,8 +57,11 @@ export async function GET(
               where: { id },
               data: {
                 status: OrderStatus.NEEDS_MANUAL_REVIEW,
-                groupOrderNumber: outputData.order_info?.order_number || order.groupOrderNumber,
-                data: outputData,
+                groupOrderNumber: outputData.group_orders?.[0]?.group_order_number || order.groupOrderNumber,
+                data: {
+                  ...outputData,
+                  originalFiles: (order.data as any)?.originalFiles || []
+                },
               },
               include: {
                 platform: true,
@@ -133,9 +136,12 @@ export async function PATCH(
       where: { id },
       data: {
         ...(status && { status: status as OrderStatus }),
-        ...(data && { data }),
-        ...(data && { manuallyEdited: true }),
-        ...(data && user.role === 'admin' && { reviewedById: userId }),
+        ...(data && {
+          data,
+          groupOrderNumber: data.group_orders?.[0]?.group_order_number || existingOrder.groupOrderNumber,
+          manuallyEdited: true,
+          ...(user.role === 'admin' && { reviewedById: userId }),
+        }),
       },
       include: {
         platform: true,
@@ -147,10 +153,10 @@ export async function PATCH(
       }
     });
 
-    // If the order is being accepted (moving from NEEDS_MANUAL_REVIEW to READY_TO_SEND),
+    // If the order is being confirmed (moving from NEEDS_MANUAL_REVIEW to CONFIRMED),
     // delete the files from the engine.
     if (
-      status === OrderStatus.READY_TO_SEND &&
+      status === OrderStatus.CONFIRMED &&
       existingOrder.status === OrderStatus.NEEDS_MANUAL_REVIEW &&
       existingOrder.engineJobId
     ) {

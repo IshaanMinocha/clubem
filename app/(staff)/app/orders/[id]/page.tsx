@@ -8,8 +8,9 @@ import { Table, TableCard } from '@/app/components/ui/Table';
 import { Badge, getStatusBadgeVariant, formatStatus } from '@/app/components/ui/Badge';
 import { Button } from '@/app/components/ui/Button';
 import { useAuth } from '@/app/context/AuthContext';
-import { DownloadIcon, SheetIcon, RefreshIcon } from '@/app/components/icons';
+import { DownloadIcon, SheetIcon, RefreshIcon, SendIcon, ReviewIcon } from '@/app/components/icons';
 import { toast } from 'react-hot-toast';
+import { SendExportModal } from '@/app/components/modals/SendExportModal';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,6 +25,7 @@ export default function StaffOrderDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
 
   const fetchOrder = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -152,7 +154,7 @@ export default function StaffOrderDetailPage({ params }: PageProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id,
-          status: 'READY_TO_SEND'
+          status: 'CONFIRMED'
         }),
       });
 
@@ -244,6 +246,14 @@ export default function StaffOrderDetailPage({ params }: PageProps) {
             leftIcon={<RefreshIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />}
           >
             Refresh
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsSendModalOpen(true)}
+            leftIcon={<SendIcon className="w-4 h-4" />}
+          >
+            Send Export
           </Button>
           <Button
             variant="secondary"
@@ -338,11 +348,19 @@ export default function StaffOrderDetailPage({ params }: PageProps) {
                   </p>
                 </div>
                 <Button
+                  variant="secondary"
+                  className="w-full"
+                  leftIcon={<ReviewIcon className="w-4 h-4" />}
+                  onClick={() => router.push(`/app/review?orderId=${order.id}`)}
+                >
+                  Review Order
+                </Button>
+                <Button
                   variant="primary"
                   className="w-full"
                   onClick={handleAcceptOrder}
                 >
-                  Accept & Mark Ready
+                  Confirm Order
                 </Button>
               </div>
             )}
@@ -350,8 +368,8 @@ export default function StaffOrderDetailPage({ params }: PageProps) {
         </Card>
       </div>
 
-      {/* Export Options - Only show when order is ready or sent */}
-      {(order.status === 'READY_TO_SEND' || order.status === 'SENT') && (
+      {/* Export Options - Only show when order is confirmed */}
+      {order.status === 'CONFIRMED' && (
         <Card className="mb-6">
           <CardHeader title="Export Options" />
           <div className="flex flex-wrap gap-3">
@@ -392,6 +410,14 @@ export default function StaffOrderDetailPage({ params }: PageProps) {
           emptyMessage={order.status === 'PROCESSING' ? 'Processing items...' : 'No items found in this order'}
         />
       </TableCard>
+      {/* Modal */}
+      <SendExportModal
+        isOpen={isSendModalOpen}
+        onClose={() => setIsSendModalOpen(false)}
+        orderId={order.id}
+        userId={user?.id || ''}
+        groupOrderNumber={order.groupOrderNumber}
+      />
     </PageContainer>
   );
 }
